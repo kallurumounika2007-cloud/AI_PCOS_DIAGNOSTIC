@@ -226,4 +226,5 @@ st.markdown("""
 - Long-Term Tracking: Can monitor trends over time
 - Patient Communication: Clear visuals and downloadable report
 """)
-st.caption("🚀 Developed by Monika | OpenAI Hackathon 2025 | Empowering Women’s Health with AI")
+st.caption("🚀 Developed by MAVericks | SEEKH 2025 | Empowering Women’s Health with AI")
+
