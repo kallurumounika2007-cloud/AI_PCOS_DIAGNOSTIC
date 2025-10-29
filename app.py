@@ -234,74 +234,77 @@ with tab2:
                 st.write(doc_note)
 
             # PDF generation
+                      
             def generate_pdf():
                 pdf = FPDF()
                 pdf.set_auto_page_break(auto=True, margin=15)
                 pdf.add_page()
 
-                # Helper to clean text that causes encoding issues
+                # Clean any special characters that cause encoding errors
                 def clean_text(text):
                     return text.encode('latin-1', 'replace').decode('latin-1')
 
+                # Header
                 pdf.set_font("Arial", 'B', 16)
-                pdf.cell(0, 10, "PCOS Prediction Report", ln=True, align="C")
-                pdf.ln(6)
+                pdf.cell(0, 10, "AI-Assisted PCOS Diagnostic Report", ln=True, align="C")
+                pdf.ln(8)
+
+                # Patient info
                 pdf.set_font("Arial", '', 12)
                 pdf.cell(0, 8, f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=True)
                 pdf.cell(0, 8, f"Patient Name: {clean_text(patient_name)}", ln=True)
-                pdf.cell(0, 8, f"Age: {age} | BMI: {bmi}", ln=True)
-                pdf.ln(4)
+                pdf.cell(0, 8, f"Age: {age} yrs | BMI: {bmi}", ln=True)
+                pdf.cell(0, 8, f"Cycle: {cycle} | Weight Gain: {weight_gain} | Hair Growth: {hair_growth}", ln=True)
+                pdf.cell(0, 8, f"Regular Exercise: {exercise}", ln=True)
+                pdf.ln(6)
 
+                # Prediction
                 pdf.set_font("Arial", 'B', 12)
-                pdf.cell(0, 8, f"Prediction: {prediction_text} (Confidence: {proba*100:.1f}%)", ln=True)
-                pdf.ln(4)
+                pdf.cell(0, 8, f"Prediction: {prediction_text}", ln=True)
+                pdf.set_font("Arial", '', 12)
+                pdf.cell(0, 8, f"Confidence: {proba*100:.1f}%", ln=True)
+                pdf.ln(6)
 
+                # Doctor Explanation
                 pdf.set_font("Arial", 'B', 12)
                 pdf.cell(0, 8, "Doctor Explanation:", ln=True)
                 pdf.set_font("Arial", '', 11)
                 pdf.multi_cell(0, 7, clean_text(doctor_expl))
-                pdf.ln(2)
+                pdf.ln(4)
 
+                # Patient Explanation
                 pdf.set_font("Arial", 'B', 12)
                 pdf.cell(0, 8, "Patient Explanation:", ln=True)
                 pdf.set_font("Arial", '', 11)
                 pdf.multi_cell(0, 7, clean_text(patient_expl))
-                pdf.ln(2)
+                pdf.ln(4)
 
+                # Doctor's Note / Recommendation
                 pdf.set_font("Arial", 'B', 12)
                 pdf.cell(0, 8, "Doctor's Note / Recommendation:", ln=True)
                 pdf.set_font("Arial", '', 11)
                 pdf.multi_cell(0, 7, clean_text(doc_note))
 
+                pdf.ln(10)
+                pdf.set_font("Arial", 'I', 11)
+                pdf.multi_cell(0, 7, clean_text("Disclaimer: This report is AI-assisted and should be reviewed by a medical professional before making any health decisions."))
+
+                # Save the file
                 fname = f"PCOS_Report_{(patient_name or 'patient').replace(' ','_')}_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
                 pdf.output(fname)
                 return fname
 
-                  
-        
-    
+            # Generate and show download button
+            pdf_file = generate_pdf()
+            with open(pdf_file, "rb") as f:
+                st.download_button(
+                    label="📄 Download Diagnostic Report (PDF)",
+                    data=f,
+                    file_name=pdf_file,
+                    mime="application/pdf"
+                )
 
-            # Save prediction to history
-            history_entry = {
-                "timestamp": datetime.now().isoformat(),
-                "user": st.session_state.username,
-                "patient_name": patient_name,
-                "age": age, "bmi": bmi, "fsh": fsh, "lh": lh,
-                "fsh_lh": round(fsh_lh_ratio, 3),
-                "cycle": cycle, "weight_gain": weight_gain,
-                "hair_growth": hair_growth, "exercise": exercise,
-                "prediction": prediction_text, "probability": proba
-            }
-            hist_df = pd.DataFrame([history_entry])
-            if os.path.exists("predictions.csv"):
-                hist_df.to_csv("predictions.csv", mode='a', header=False, index=False)
-            else:
-                hist_df.to_csv("predictions.csv", index=False)
-
-            st.success("✅ Prediction complete and saved to history.")
-
-        except Exception as e:
-            st.error(f"Error during prediction: {e}")
+            
 
 # --- Prediction History ---
 with tab3:
@@ -329,5 +332,6 @@ st.markdown("""
 - This tool **enhances healthcare efficiency** and empowers doctors and patients with actionable insights, but it is **not a replacement for professional medical advice**.
 """)
 st.caption("🚀 Developed by MAVericks | SEEKH 2025 | AI-Assisted PCOS Diagnostic System")
+
 
 
