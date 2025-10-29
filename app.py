@@ -9,13 +9,13 @@ import plotly.express as px
 from fpdf import FPDF
 import os
 from datetime import datetime
+import random
 
 # -----------------------------
 # Configuration & Theme
 # -----------------------------
 st.set_page_config(page_title="AI-Assisted PCOS Diagnostic System",
                    page_icon="💊", layout="wide", initial_sidebar_state="expanded")
-
 
 st.markdown("""
     <style>
@@ -27,7 +27,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("AI-Assisted PCOS Diagnostic & Support System")
+st.title("💫 AI-Assisted PCOS Diagnostic & Support System")
 st.markdown("An explainable AI assistant for early detection, doctor decision support, and patient communication.")
 
 # -----------------------------
@@ -42,7 +42,7 @@ if "username" not in st.session_state:
 def do_logout():
     st.session_state.authenticated = False
     st.session_state.username = ""
-    st.rerun()  # updated
+    st.rerun()
 
 if not st.session_state.authenticated:
     st.header("🔐 Login")
@@ -53,7 +53,7 @@ if not st.session_state.authenticated:
             st.session_state.authenticated = True
             st.session_state.username = username
             st.success("Login successful")
-            st.rerun()  # updated
+            st.rerun()
         else:
             st.error("Invalid username or password")
     st.stop()
@@ -63,63 +63,38 @@ else:
         do_logout()
 
 # -----------------------------
-# OpenAI setup
-# -----------------------------
-if "openai" in st.secrets and "api_key" in st.secrets["openai"]:
-    openai.api_key = st.secrets["openai"]["api_key"]
-else:
-    openai.api_key = None
-
-# -----------------------------
-# AI Explanation Functions
+# Mock AI Explanation Function (replaces OpenAI)
 # -----------------------------
 def call_openai_for_explanations(user_info, prediction_text, probability):
-    prompt = f"""
-You are a helpful medical assistant. Given the patient info and prediction below, produce three short sections:
-1) Doctor Explanation (2-4 sentences, clinical, mentions which features influenced the prediction),
-2) Patient Explanation (2 sentences, very simple, friendly, not technical),
-3) Doctor Recommendation (one-line clinical recommendation: tests/next steps).
+    """Simulated AI explanation generator (mock replacement for OpenAI API)"""
+    doctor_templates = [
+        "The model found patterns linked to PCOS, mainly due to hormonal imbalance and higher LH/FSH ratio. The BMI and cycle irregularity had a strong influence on this prediction.",
+        "This result was primarily influenced by hormonal levels and cycle pattern irregularities. BMI also contributed moderately to the prediction confidence.",
+        "The assessment was driven by elevated LH levels, hormonal imbalance, and signs of irregular menstrual cycles that often correlate with PCOS risk."
+    ]
+    patient_templates = [
+        "Your hormone levels and cycle data suggest possible PCOS. Please consult your doctor for further advice and tests.",
+        "There are mild signs that may indicate PCOS. It’s a good idea to visit your doctor for confirmation and guidance.",
+        "Some results look slightly unusual, which may suggest PCOS. Please consider a clinical consultation for clarity."
+    ]
+    doctor_notes = [
+        "Recommend ultrasound and hormonal panel re-evaluation within 3 months.",
+        "Suggest follow-up with gynecologist and maintain healthy diet and exercise.",
+        "Further tests (LH, FSH, AMH) advised; review progress in follow-up visit."
+    ]
 
-Patient info:
-{user_info}
-
-Prediction: {prediction_text}
-Confidence: {probability*100:.1f}%
-Return the three sections labeled clearly as DOCTOR_EXPLANATION:, PATIENT_EXPLANATION:, DOCTOR_NOTE:
-"""
-    try:
-        resp = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role":"system","content":"You are a helpful medical assistant."},
-                      {"role":"user","content":prompt}],
-            max_tokens=300,
-            temperature=0.2,
+    if "Likely" in prediction_text:
+        return (
+            random.choice(doctor_templates),
+            random.choice(patient_templates),
+            random.choice(doctor_notes)
         )
-        text = resp.choices[0].message.content
-        doctor_expl, patient_expl, doctor_note = "", "", ""
-        lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
-        current = None
-        for ln in lines:
-            up = ln.upper()
-            if up.startswith("DOCTOR_EXPLANATION"):
-                current = "doctor"
-                content = ln.split(":",1)[1].strip() if ":" in ln else ""
-                doctor_expl += content + " "
-            elif up.startswith("PATIENT_EXPLANATION"):
-                current = "patient"
-                content = ln.split(":",1)[1].strip() if ":" in ln else ""
-                patient_expl += content + " "
-            elif up.startswith("DOCTOR_NOTE"):
-                current = "note"
-                content = ln.split(":",1)[1].strip() if ":" in ln else ""
-                doctor_note += content + " "
-            else:
-                if current == "doctor": doctor_expl += ln + " "
-                elif current == "patient": patient_expl += ln + " "
-                elif current == "note": doctor_note += ln + " "
-        return doctor_expl.strip(), patient_expl.strip(), doctor_note.strip()
-    except Exception:
-        return None
+    else:
+        return (
+            "The input data appears normal, with no strong hormonal indicators of PCOS.",
+            "Your values seem within the healthy range. Low risk of PCOS detected.",
+            "Maintain routine health checks and continue current lifestyle."
+        )
 
 def demo_explanations_for(prediction_text, probability, user_info):
     if "Likely" in prediction_text:
@@ -210,14 +185,14 @@ with tab1:
 with tab2:
     st.subheader("Predict & AI Explanations")
     st.write("Click **Predict** to run the model. Toggle AI explanations on/off below.")
-    ai_toggle = st.checkbox("Enable live AI explanations", value=False)
+    ai_toggle = st.checkbox("Enable AI explanations", value=True)
 
     if st.button("Predict"):
         try:
             # Run prediction
             prediction = model.predict(user_data)[0]
-            proba = model.predict_proba(user_data)[0][1]  # probability of positive class
-            threshold = 0.6  # realistic threshold
+            proba = model.predict_proba(user_data)[0][1]
+            threshold = 0.65
             if proba >= threshold:
                 prediction_text = "Likely to have PCOS"
                 st.error(f"{prediction_text} — Confidence: {proba*100:.1f}%")
@@ -232,7 +207,7 @@ with tab2:
             fig = px.bar(feature_importance, x='Importance', y='Feature', orientation='h', color='Importance')
             st.plotly_chart(fig, use_container_width=True)
 
-            # Prepare patient info for AI
+            # Prepare patient info
             user_info = {
                 "Patient Name": patient_name or "N/A",
                 "Age": age, "BMI": bmi, "FSH": fsh, "LH": lh,
@@ -241,20 +216,15 @@ with tab2:
                 "Hair Growth": hair_growth, "Exercise": exercise
             }
 
-            # AI Explanations
-            doctor_expl, patient_expl, doc_note = None, None, None
-            if ai_toggle and openai.api_key:
-                result = call_openai_for_explanations(user_info, prediction_text, proba)
-                if result:
-                    doctor_expl, patient_expl, doc_note = result
-
-            # Fallback to demo explanations if live AI fails
-            if not doctor_expl:
+            # AI Explanations (mocked)
+            if ai_toggle:
+                doctor_expl, patient_expl, doc_note = call_openai_for_explanations(user_info, prediction_text, proba)
+            else:
                 doctor_expl, patient_expl, doc_note = demo_explanations.get(
                     prediction_text, demo_explanations_for(prediction_text, proba, user_info)
                 )
 
-            # Display AI outputs
+            # Display
             st.markdown("### 🤖 AI Explanations")
             with st.expander("Doctor Explanation (detailed)"):
                 st.write(doctor_expl)
@@ -322,7 +292,6 @@ with tab2:
         except Exception as e:
             st.error(f"Error during prediction: {e}")
 
-
 # --- Prediction History ---
 with tab3:
     st.header("📊 Prediction History")
@@ -349,4 +318,3 @@ st.markdown("""
 - This tool **enhances healthcare efficiency** and empowers doctors and patients with actionable insights, but it is **not a replacement for professional medical advice**.
 """)
 st.caption("🚀 Developed by MAVericks | SEEKH 2025 | AI-Assisted PCOS Diagnostic System")
-
