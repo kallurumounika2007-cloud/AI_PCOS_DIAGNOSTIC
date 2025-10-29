@@ -8,7 +8,6 @@ from sklearn.ensemble import RandomForestClassifier
 import plotly.express as px
 from fpdf import FPDF
 import os
-import openai
 from datetime import datetime
 
 # -----------------------------
@@ -350,3 +349,4 @@ st.markdown("""
 - This tool **enhances healthcare efficiency** and empowers doctors and patients with actionable insights, but it is **not a replacement for professional medical advice**.
 """)
 st.caption("🚀 Developed by MAVericks | SEEKH 2025 | AI-Assisted PCOS Diagnostic System")
+
