@@ -303,7 +303,7 @@ with tab2:
                     file_name=pdf_file,
                     mime="application/pdf"
                 )
-       except Exception as e:
+        except Exception as e:
             st.error(f"Error during prediction: {e}")
 
             
@@ -335,6 +335,7 @@ st.markdown("""
 - This tool **enhances healthcare efficiency** and empowers doctors and patients with actionable insights, but it is **not a replacement for professional medical advice**.
 """)
 st.caption("🚀 Developed by MAVericks | SEEKH 2025 | AI-Assisted PCOS Diagnostic System")
+
 
 
 
